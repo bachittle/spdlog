@@ -249,17 +249,17 @@ TEST_CASE("padding_funcname", "[pattern_formatter]")
 {
     spdlog::sinks::test_sink_st test_sink;
 
-    const char *pattern = "%v [%10!]";
+    const char *pattern = "%v [%10!v";
     auto formatter = std::unique_ptr<spdlog::formatter>(new spdlog::pattern_formatter(pattern));
     test_sink.set_formatter(std::move(formatter));
 
     spdlog::details::log_msg msg1{spdlog::source_loc{"ignored", 1, "func"}, "test_logger", spdlog::level::info, "message"};
     test_sink.log(msg1);
-    REQUIRE(test_sink.lines()[0] == "message [      func]");
+    REQUIRE(test_sink.lines()[0] == "message [      funcv");
 
     spdlog::details::log_msg msg2{spdlog::source_loc{"ignored", 1, "func567890123"}, "test_logger", spdlog::level::info, "message"};
     test_sink.log(msg2);
-    REQUIRE(test_sink.lines()[1] == "message [func567890123]");
+    REQUIRE(test_sink.lines()[1] == "message [func567890123v");
 }
 
 TEST_CASE("clone-default-formatter", "[pattern_formatter]")
