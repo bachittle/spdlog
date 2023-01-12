@@ -383,7 +383,7 @@ protected:
     details::backtracer tracer_;
 
     attribute_list attributes;
-    std::vector<std::size_t> attr_stack; // used to push/pop nested contexts
+    std::vector<long> attr_stack; // used to push/pop nested contexts
 
     // common implementation for after templated public api has been resolved
     template<typename... Args>
