@@ -384,28 +384,32 @@ void replace_default_logger_example()
 
 void attribute_example() {
     auto custom_logger = spdlog::stdout_color_mt("custom_logger");
-    // auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    // auto custom_logger = spdlog::stdout_color_mt("custom_logger");
 
     custom_logger->push_context(spdlog::attribute_list{{"attribute_key", "attribute value"}});
     custom_logger->warn("EXPERIMENTAL: log with attributes");
-    custom_logger->clear_context(); // only use once
+    custom_logger->clear_context();
 
-    // logfmt structured logging using attributes
+    // structured logging using attributes
 
-    // auto logfmt_logger = spdlog::basic_logger_mt("logfmt_logger", "logs/mylog.txt");
-    auto logfmt_logger = spdlog::stdout_color_mt("logfmt_logger");
+    // auto s_logger = spdlog::basic_logger_mt("structured logger", "logs/mylog.txt");
+    auto s_logger = spdlog::stdout_color_mt("structured logger");
 
-    std::string logfmt_pattern = "time=%Y-%m-%dT%H:%M:%S.%f%z name=%n level=%^%l%$ process=%P thread=%t message=\"%v\"%( %K=\"%V\"%)";
-    logfmt_logger->set_pattern(logfmt_pattern);
+    #if 0
+    std::string json_pattern = "{\"time\":\"%Y-%m-%dT%H:%M:%S.%e%z\",\"name\":\"%n\",\"level\":\"%l\",\"message\":\"%v\"%(,\"%K\":\"%V\"%)}";
+    s_logger->set_pattern(std::move(json_pattern));
+    #endif
+    #if 1
+    std::string logfmt_pattern = "time=%Y-%m-%dT%H:%M:%S.%f%z name=\"%n\" level=%^%l%$ process=%P thread=%t message=\"%v\"%( %K=\"%V\"%)";
+    s_logger->set_pattern(std::move(logfmt_pattern));
+    #endif
 
-    logfmt_logger->push_context(spdlog::attribute_list{{"key\n1", "value\n1"}});
-    logfmt_logger->info("logfmt structured logging: test 1");
-    logfmt_logger->push_context(spdlog::attribute_list{{"key\n2", "value\n2"}});
-    logfmt_logger->info("logfmt structured logging: test 2");
-    logfmt_logger->pop_context();
-    logfmt_logger->info("logfmt structured logging: test 3");
-    logfmt_logger->pop_context();
-    logfmt_logger->info("logfmt structured logging: test 4");
-    logfmt_logger->clear_context();
+    s_logger->push_context(spdlog::attribute_list{{"key\n1", "value\n1"}});
+    s_logger->info("structured logging: test 1");
+    s_logger->push_context(spdlog::attribute_list{{"key\n2", "value\n2"}});
+    s_logger->info("structured logging: test 2");
+    s_logger->pop_context();
+    s_logger->info("structured logging: test 3");
+    s_logger->pop_context();
+    s_logger->info("structured logging: test 4");
+    s_logger->clear_context();
 }
