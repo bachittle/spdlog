@@ -87,7 +87,7 @@ public:
 
     void push_context(attribute_list attrs) {
         attributes.insert(attributes.end(), attrs.begin(), attrs.end());
-        attr_stack.push_back(attributes.size());
+        attr_stack.push_back(static_cast<long>(attributes.size()));
     }
 
     void pop_context() {
