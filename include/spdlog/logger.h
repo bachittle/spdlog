@@ -90,6 +90,11 @@ public:
         attributes = std::move(attrs);
     }
 
+    // instead of replacing attributes, this appends to context that already exists
+    void append_context(attribute_list attrs) {
+        attributes.insert(attributes.end(), attrs.begin(), attrs.end());
+    }
+
     // removes context on loggers by clearing the attribute list
     void clear_context() {
         attributes.clear();

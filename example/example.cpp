@@ -399,7 +399,8 @@ void attribute_example() {
     std::string logfmt_pattern = "time=%Y-%m-%dT%H:%M:%S.%f%z name=%n level=%^%l%$ process=%P thread=%t message=\"%v\"%( %K=\"%V\"%)";
     logfmt_logger->set_pattern(logfmt_pattern);
 
-    logfmt_logger->set_context(spdlog::attribute_list{{"key\n1", "value\n1"}, {"key\r\n2", "value\r\n2"}});
+    logfmt_logger->set_context(spdlog::attribute_list{{"key\n1", "value\n1"}});
+    logfmt_logger->append_context(spdlog::attribute_list{{"key\n2", "value\n2"}});
     logfmt_logger->info("logfmt structured logging: test 1");
     logfmt_logger->info("logfmt structured logging: test 2");
     logfmt_logger->clear_context();
