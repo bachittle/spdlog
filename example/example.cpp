@@ -383,12 +383,13 @@ void replace_default_logger_example()
 }
 
 void attribute_example() {
-    // auto custom_logger = spdlog::stdout_color_mt("custom_logger", spdlog::attribute_list{{"fixed_key", "fixed_val"}});
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto custom_logger = spdlog::logger{"custom_logger", console_sink, {{"fixed_key", "fixed_val"}}};
+    auto custom_logger = spdlog::stdout_color_mt("custom_logger");
+    // auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     // auto custom_logger = spdlog::stdout_color_mt("custom_logger");
 
-    custom_logger.warn("EXPERIMENTAL: log with attributes", {{"attribute_key", "attribute value"}});
+    custom_logger->set_context(spdlog::attribute_list{{"attribute_key", "attribute value"}});
+    custom_logger->warn("EXPERIMENTAL: log with attributes");
+    custom_logger->clear_context(); // only use once
 
     // logfmt structured logging using attributes
 
@@ -398,5 +399,8 @@ void attribute_example() {
     std::string logfmt_pattern = "time=%Y-%m-%dT%H:%M:%S.%f%z name=%n level=%^%l%$ process=%P thread=%t message=\"%v\"%( %K=\"%V\"%)";
     logfmt_logger->set_pattern(logfmt_pattern);
 
-    logfmt_logger->info("logfmt structured logging", spdlog::attribute_list{{"key\n1", "value\n1"}, {"key\r\n2", "value\r\n2"}});
+    logfmt_logger->set_context(spdlog::attribute_list{{"key\n1", "value\n1"}, {"key\r\n2", "value\r\n2"}});
+    logfmt_logger->info("logfmt structured logging: test 1");
+    logfmt_logger->info("logfmt structured logging: test 2");
+    logfmt_logger->clear_context();
 }
