@@ -85,19 +85,25 @@ public:
     logger &operator=(logger other) SPDLOG_NOEXCEPT;
     void swap(spdlog::logger &other) SPDLOG_NOEXCEPT;
 
-    // adds context to loggers via attribute list
-    void set_context(attribute_list attrs) {
-        attributes = std::move(attrs);
+    void push_context(attribute_list attrs) {
+        attributes.insert(attributes.end(), attrs.begin(), attrs.end());
+        attr_stack.push_back(attributes.size());
     }
 
-    // instead of replacing attributes, this appends to context that already exists
-    void append_context(attribute_list attrs) {
-        attributes.insert(attributes.end(), attrs.begin(), attrs.end());
+    void pop_context() {
+        if (attr_stack.size() > 1) {
+            attributes.erase(attributes.begin() + attr_stack[attr_stack.size() - 2], attributes.begin() + attr_stack[attr_stack.size() - 1]);
+            attr_stack.pop_back();
+        } else {
+            // is first element in stack, or empty. Delete the whole thing.
+            clear_context();
+        }
     }
 
     // removes context on loggers by clearing the attribute list
     void clear_context() {
         attributes.clear();
+        attr_stack.clear();
     }
 
     template<typename... Args>
@@ -376,7 +382,8 @@ protected:
     err_handler custom_err_handler_{nullptr};
     details::backtracer tracer_;
 
-    std::vector<details::attr> attributes; // always printed, along with the level
+    attribute_list attributes;
+    std::vector<std::size_t> attr_stack; // used to push/pop nested contexts
 
     // common implementation for after templated public api has been resolved
     template<typename... Args>
