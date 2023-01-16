@@ -937,7 +937,7 @@ public:
     explicit attr_formatter_start(padding_info padinfo)
         : flag_formatter(padinfo, details::attr_flags::start)
     {}
-    void format(const details::log_msg &, const std::tm &, memory_buf_t &dest) override
+    void format(const details::log_msg &, const std::tm &, memory_buf_t &) override
     {
         // fmt_helper::append_string_view("%(", dest);
     }
@@ -948,7 +948,7 @@ public:
     explicit attr_formatter_stop(padding_info padinfo)
         : flag_formatter(padinfo, details::attr_flags::stop)
     {}
-    void format(const details::log_msg &, const std::tm &, memory_buf_t &dest) override
+    void format(const details::log_msg &, const std::tm &, memory_buf_t &) override
     {
         // fmt_helper::append_string_view("%)", dest);
     }
@@ -960,7 +960,7 @@ public:
     explicit attr_formatter_key(padding_info padinfo)
         : flag_formatter(padinfo, details::attr_flags::key)
     {}
-    void format(const details::log_msg &, const std::tm &, memory_buf_t &dest) override
+    void format(const details::log_msg &, const std::tm &, memory_buf_t &) override
     {
         // fmt_helper::append_string_view("%K", dest);
     }
@@ -972,7 +972,7 @@ public:
     explicit attr_formatter_value(padding_info padinfo)
         : flag_formatter(padinfo, details::attr_flags::value)
     {}
-    void format(const details::log_msg &, const std::tm &, memory_buf_t &dest) override
+    void format(const details::log_msg &, const std::tm &, memory_buf_t &) override
     {
         // fmt_helper::append_string_view("%V", dest);
     }
