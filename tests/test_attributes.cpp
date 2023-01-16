@@ -19,12 +19,8 @@ TEST_CASE("async logfmt test ", "[attributes]")
     auto tp = std::make_shared<spdlog::details::thread_pool>(num_msgs, 10);
     std::vector<std::shared_ptr<spdlog::logger>> loggers;
     for (int i = 0; i < num_loggers; ++i) {
-        loggers.push_back(std::make_shared<spdlog::async_logger>("attr_logger_"+std::to_string(i), test_sink, tp, spdlog::async_overflow_policy::block));
-        // loggers.push_back(
-        //     std::make_shared<spdlog::async_logger>(
-        //         "attr_logger_"+std::to_string(i), file_sink, spdlog::attribute_list{{"fixed_key_"+std::to_string(i), "fixed_val_"+std::to_string(i)}}, std::move(tp)
-        //     )
-        // );
+        loggers.push_back(std::make_shared<spdlog::async_logger>(
+            "attr_logger_"+std::to_string(i), test_sink, tp, spdlog::async_overflow_policy::block));
     }
 
     #if 0
@@ -38,8 +34,11 @@ TEST_CASE("async logfmt test ", "[attributes]")
     for (int i = 0; i < num_msgs; ++i) {
         for (auto& lg : loggers) {
             threads.emplace_back([&](){
-                lg->info("testing "+std::to_string(i), {{"key_"+std::to_string(i), "val_"+std::to_string(i)}});
-                // lg->info("testing "+std::to_string(i));
+                // push and pop context are not guaranteed to be thread safe
+                // so pushing and popping of contexts are isolated for individual logger objects (so no sharing)
+                lg->push_context({{"key_"+std::to_string(i), "val_"+std::to_string(i)}});
+                lg->info("testing {}", i);
+                lg->pop_context();
             });
         }
     }
@@ -57,5 +56,5 @@ TEST_CASE("async logfmt test ", "[attributes]")
     REQUIRE(test_sink->flush_counter() == num_loggers);
     REQUIRE(overrun_counter == 0);
 
-    // todo: parse logfmt, make a utils.cpp function to parse logfmt in c++ to test a file
+    // todo: parse logfmt or json, make a utils.cpp function to parse data from test file or buffer
 }
