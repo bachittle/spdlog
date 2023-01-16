@@ -52,10 +52,12 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
     REQUIRE(overrun_counter == 0);
 
     // todo: better parsing of keys and values, maybe using regex
+    #if 0
     for (auto& line : test_sink->lines()) {
-        // REQUIRE(line.find("key") != std::string::npos);
-        // REQUIRE(line.find("val") != std::string::npos);
+        REQUIRE(line.find("key") != std::string::npos);
+        REQUIRE(line.find("val") != std::string::npos);
     }
+    #endif
 }
 
 // testing custom patterns, including the new attribute patterns, with many use cases.
