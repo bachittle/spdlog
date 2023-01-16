@@ -26,8 +26,8 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
 
     std::vector<std::thread> threads;
     for (int i = 0; i < num_msgs; ++i) {
-        for (auto& lg : loggers) {
-            threads.emplace_back([&](){
+        for (auto lg : loggers) {
+            threads.emplace_back([&, lg, i](){
                 // push and pop context are not guaranteed to be thread safe
                 // so pushing and popping of contexts are isolated for individual logger objects (so no sharing)
                 lg->push_context({{"key"+std::to_string(i), "val"+std::to_string(i)}});
