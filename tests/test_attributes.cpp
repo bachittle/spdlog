@@ -26,7 +26,7 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
 
     std::vector<std::thread> threads;
     for (auto lg : loggers) {
-        threads.emplace_back([lg, num_msgs](){
+        threads.emplace_back([=](){
             // push and pop context are not guaranteed to be thread safe
             // therefore, messages from the same logger object have to be in the same thread
             // to guarantee thread safety, use a different logger object for each thread
