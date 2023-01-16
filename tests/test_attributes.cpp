@@ -2,12 +2,13 @@
 #include "includes.h"
 #include "test_sink.h"
 #include <string>
+#include <sstream>
 #include <thread>
 
 #define TEST_FILENAME "test_logs/attr_test.log"
 
 // see if multiple async logs to a single file is thread-safe, i.e. produces coherent structured logs
-TEST_CASE("async logfmt test ", "[attributes]")
+TEST_CASE("async attributes test with threads ", "[attributes]")
 {
     auto test_sink = std::make_shared<spdlog::sinks::test_sink_mt>();
 
@@ -23,20 +24,13 @@ TEST_CASE("async logfmt test ", "[attributes]")
             "attr_logger_"+std::to_string(i), test_sink, tp, spdlog::async_overflow_policy::block));
     }
 
-    #if 0
-    std::string logfmt_pattern = "time=%Y-%m-%dT%H:%M:%S.%f%z name=\"%n\" level=%^%l%$ process=%P thread=%t message=\"%v\" ";
-    for (auto& lg : loggers) {
-        lg->set_pattern(logfmt_pattern);
-    }
-    #endif
-
     std::vector<std::thread> threads;
     for (int i = 0; i < num_msgs; ++i) {
         for (auto& lg : loggers) {
             threads.emplace_back([&](){
                 // push and pop context are not guaranteed to be thread safe
                 // so pushing and popping of contexts are isolated for individual logger objects (so no sharing)
-                lg->push_context({{"key_"+std::to_string(i), "val_"+std::to_string(i)}});
+                lg->push_context({{"key"+std::to_string(i), "val"+std::to_string(i)}});
                 lg->info("testing {}", i);
                 lg->pop_context();
             });
@@ -56,5 +50,58 @@ TEST_CASE("async logfmt test ", "[attributes]")
     REQUIRE(test_sink->flush_counter() == num_loggers);
     REQUIRE(overrun_counter == 0);
 
-    // todo: parse logfmt or json, make a utils.cpp function to parse data from test file or buffer
+    // todo: better parsing of keys and values, maybe using regex
+    for (auto& line : test_sink->lines()) {
+        REQUIRE(line.find("key") != std::string::npos);
+        REQUIRE(line.find("val") != std::string::npos);
+    }
+}
+
+// testing custom patterns, including the new attribute patterns, with many use cases.
+// some use cases may result in errors or undesirable behaviour, but the test should not crash.
+TEST_CASE("pattern matching with attributes ", "[attributes]")
+{
+    auto test_sink = std::make_shared<spdlog::sinks::test_sink_mt>();
+    auto logger = std::make_shared<spdlog::logger>("attr_logger", test_sink);
+    std::string msg = "testing";
+    logger->push_context({{"key1", "value1"}, {"key2", "value2"}});
+
+    // a pattern with no stop flag will consider the stop flag as the end
+    logger->set_pattern("%v%( %K=%V");
+    logger->info(msg);
+
+    REQUIRE(test_sink->lines()[test_sink->msg_counter()-1] == msg+" key1=value1 key2=value2");
+
+    // a pattern with no start flag will be parsed as-is. the new flags will be treated as empty strings. 
+    logger->set_pattern("%v %K=%V%) %v end");
+    logger->info("testing");
+
+    REQUIRE(test_sink->lines()[test_sink->msg_counter()-1] == msg+" = "+msg+" end");
+
+    // a pattern with nested flags will print those flags for every key-value pair
+    logger->set_pattern("%(%v %K=%V %)");
+    logger->info("testing");
+    REQUIRE(test_sink->lines()[test_sink->msg_counter()-1] == msg+" key1=value1 "+msg+" key2=value2 ");
+
+    logger->set_pattern("%v start%( %K=%V%) %v end");
+    // zero kv pairs
+    logger->clear_context();
+    logger->push_context({});
+    logger->info(msg);
+
+    REQUIRE(test_sink->lines()[test_sink->msg_counter()-1] == msg+" start "+msg+" end");
+
+    // N kv pairs
+    for (int i = 0; i < 50; ++i) {
+        logger->push_context({{"key"+std::to_string(i), "value"+std::to_string(i)}});
+        logger->info("testing");
+        std::stringstream ss;
+        ss << msg << " start";
+        for (int j = 0; j <= i; ++j) {
+            ss << " key" << j << "=value" << j;
+        }
+        ss << ' ' << msg << " end";
+
+        REQUIRE(test_sink->lines()[test_sink->msg_counter()-1] == ss.str());
+    }
 }
