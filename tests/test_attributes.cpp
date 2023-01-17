@@ -17,11 +17,11 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
     size_t overrun_counter = 0;
 
     {
-    auto tp = std::make_shared<spdlog::details::thread_pool>(100, 1);
+    auto tp = std::make_shared<spdlog::details::thread_pool>(num_loggers * num_msgs, 1);
     std::vector<std::shared_ptr<spdlog::logger>> loggers;
     for (int i = 0; i < num_loggers; ++i) {
         loggers.push_back(std::make_shared<spdlog::async_logger>(
-            "attr_logger_"+std::to_string(i), test_sink, tp, spdlog::async_overflow_policy::overrun_oldest));
+            "attr_logger_"+std::to_string(i), test_sink, tp, spdlog::async_overflow_policy::block));
     }
 
     std::vector<std::thread> threads;
