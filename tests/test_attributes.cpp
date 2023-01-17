@@ -17,7 +17,7 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
     size_t overrun_counter = 0;
 
     {
-    auto tp = std::make_shared<spdlog::details::thread_pool>(num_msgs, 10);
+    auto tp = std::make_shared<spdlog::details::thread_pool>(100, 1);
     std::vector<std::shared_ptr<spdlog::logger>> loggers;
     for (int i = 0; i < num_loggers; ++i) {
         loggers.push_back(std::make_shared<spdlog::async_logger>(
@@ -41,7 +41,7 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
         th.join();
     }
 
-    for (auto& lg : loggers) {
+    for (auto lg : loggers) {
         lg->flush();
     }
     overrun_counter += tp->overrun_counter();
