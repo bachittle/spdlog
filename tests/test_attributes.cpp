@@ -12,12 +12,12 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
 {
     auto test_sink = std::make_shared<spdlog::sinks::test_sink_mt>();
 
-    constexpr int num_loggers = 3;
-    constexpr int num_msgs = 100;
+    constexpr int num_loggers = 10;
+    constexpr int num_msgs = 10;
     size_t overrun_counter = 0;
 
     {
-    auto tp = std::make_shared<spdlog::details::thread_pool>(num_msgs, 10);
+    auto tp = std::make_shared<spdlog::details::thread_pool>(num_loggers * num_msgs, 1);
     std::vector<std::shared_ptr<spdlog::logger>> loggers;
     for (int i = 0; i < num_loggers; ++i) {
         loggers.push_back(std::make_shared<spdlog::async_logger>(
@@ -25,22 +25,23 @@ TEST_CASE("async attributes test with threads ", "[attributes]")
     }
 
     std::vector<std::thread> threads;
-    for (int i = 0; i < num_msgs; ++i) {
-        for (auto lg : loggers) {
-            threads.emplace_back([&, lg, i](){
-                // push and pop context are not guaranteed to be thread safe
-                // so pushing and popping of contexts are isolated for individual logger objects (so no sharing)
+    for (auto lg : loggers) {
+        threads.emplace_back([=](){
+            // push and pop context are not guaranteed to be thread safe
+            // therefore, messages from the same logger object have to be in the same thread
+            // to guarantee thread safety, use a different logger object for each thread
+            for (int i = 0; i < num_msgs; ++i) {
                 lg->push_context({{"key"+std::to_string(i), "val"+std::to_string(i)}});
                 lg->info("testing {}", i);
                 lg->pop_context();
-            });
-        }
+            }
+        });
     }
     for (auto& th : threads) {
         th.join();
     }
 
-    for (auto& lg : loggers) {
+    for (auto lg : loggers) {
         lg->flush();
     }
     overrun_counter += tp->overrun_counter();
