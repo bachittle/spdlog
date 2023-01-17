@@ -1156,14 +1156,10 @@ SPDLOG_INLINE void pattern_formatter::format(const details::log_msg &msg, memory
 
             // first look for stop iterator. If not found consider it the end iterator (repeat the last values for all attributes).
             auto stop_it = it;
-            for (auto it2 = it; it2 != formatters_.end(); ++it2) {
-                if ((*it2)->flag_ == details::attr_flags::stop) {
-                    stop_it = it2;
+            for (; stop_it != formatters_.end(); ++stop_it) {
+                if ((*stop_it)->flag_ == details::attr_flags::stop) {
                     break;
                 }
-            }
-            if (stop_it == it) {
-                stop_it = formatters_.end();
             }
 
             // now iterate through attributes, printing the nested format
